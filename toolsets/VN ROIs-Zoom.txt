@@ -1,0 +1,31 @@
+macro "Zoom out all images [0]" 
+{for (j=1; j<=nImages; j++) {selectImage(j);run("Out [-]");}
+}
+
+/// For Zoom In: {for (j=1; j<=nImages; j++) {selectImage(j);run("In [+]");}
+
+
+macro "Rename last ROI [u]" 
+{
+roiCount=roiManager("count");
+roiManager("Add");
+roiManager("Select",roiCount);
+roiManager("Rename", getTitle() + "_" + roiCount);
+}
+
+macro "Rename last ROI [n7]" 
+{
+roiCount=roiManager("count");
+roiManager("Add");
+roiManager("Select",roiCount);
+roiManager("Rename", getTitle() + "_" + "Background");
+}
+
+macro "Rename last ROI [n8]" 
+{
+roiCount=roiManager("count");
+roiManager("Add");
+roiManager("Select",roiCount);
+roiManager("Rename", getTitle() + "_" + roiCount);
+}
+

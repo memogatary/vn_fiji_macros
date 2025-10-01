@@ -1,0 +1,11 @@
+{
+  "ctags-companion.tagFilePath": "${workspaceFolder}/ctags/ijm.tags",
+  "ctags-companion.provideDocumentSymbols": true,
+  "ctags-companion.documentSelector": [
+    { "language": "ijm", "scheme": "file" },
+    { "language": "ijm", "scheme": "untitled" },
+    { "pattern": "**/*.ijm" }
+  ],
+  "files.associations": { "*.ijm": "javascript" },
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
+}

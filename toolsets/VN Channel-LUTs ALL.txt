@@ -1,0 +1,90 @@
+macro "Bright LUT all Channels  all images [Q]" 
+{
+// This tool works for maximum of 4 channels
+for (j=1; j<=nImages; j++) {
+selectImage(j);
+run("Channels Tool...");
+Stack.setDisplayMode("composite");
+Stack.setActiveChannels("1111");
+Stack.setChannel(1);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(2);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(3);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(4);
+run("Enhance Contrast", "saturated=0.35");
+}
+}
+
+macro "Bright LUT all Channels but Channel 1  all images [n4]" 
+{
+for (j=1; j<=nImages; j++) {
+selectImage(j);
+run("Channels Tool...");
+Stack.setDisplayMode("composite");
+Stack.setActiveChannels("0111");
+Stack.setChannel(1);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(2);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(3);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(4);
+run("Enhance Contrast", "saturated=0.35");
+}
+}
+
+macro "Bright LUT all Channels but Channel 2  all images [n5]" 
+{
+for (j=1; j<=nImages; j++) {
+selectImage(j);
+run("Channels Tool...");
+Stack.setDisplayMode("composite");
+Stack.setActiveChannels("1011");
+Stack.setChannel(1);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(2);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(3);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(4);
+run("Enhance Contrast", "saturated=0.35");
+}
+}
+
+macro "Bright LUT all Channels but Channel 3  all images [n6]" 
+{
+for (j=1; j<=nImages; j++) {
+selectImage(j);
+run("Channels Tool...");
+Stack.setDisplayMode("composite");
+Stack.setActiveChannels("1101");
+Stack.setChannel(1);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(2);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(3);
+run("Enhance Contrast", "saturated=0.35");
+Stack.setChannel(4);
+run("Enhance Contrast", "saturated=0.35");
+}
+}
+
+macro "Apply same LUTs for all images [n0]"
+{
+// Select one image and set same LUTs for all others
+currentImage = getImageID();
+selectImage(currentImage);
+nChannels = nSlices;
+for (i=1; i<=nSlices; i++) {
+selectImage(currentImage);
+Stack.setChannel(i);
+getMinAndMax(min, max);
+	for (j=1; j<=nImages; j++) {
+		selectImage(j);
+		Stack.setChannel(i);
+		setMinAndMax(min, max);
+	}
+}
+}
