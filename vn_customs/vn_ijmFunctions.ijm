@@ -1,17 +1,8 @@
-macro "===Log===" {	
-}
+===================================
+macro "===CUSTOMED FUNCTIONS===" {}
+===================================
 
-macro "+++Helpful Built-in Functions+++" {	
-	// Get Image Direction (including image name)
-	print(getDirectory("image") + getTitle());
-
-	//Select Channel
-	setSlice(slincenumber);
-
-}
-
-/// Log Date/Times/ImageDir/ImageSize
-function LogTimeAndImageInfo() {
+function LOG_TimeAndImageInfo() {
 	// Date and Times
 	MonthNames = newArray("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec");
 	DayNames = newArray("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat");
@@ -33,14 +24,7 @@ function LogTimeAndImageInfo() {
 	print("Pixel Width = " + pxW + ", Height = " + pxH + " " + unit);
 }
 
-function LoopThroughEachImage {
-	for (j = 1; j <= nImages; j++) {
-		// Code
-	}
-}
-
-///MakeCustomSelection based on an automatic algorithm
-function MakeSelectionAuto(Channel, method) {
+function SELECTION_AutoThreshold(Channel, method) {
 	ori_image = getImageID();
 	if (selectionType() != -1) {
 		print("Threshold with " + method + " on channel " + Channel);
@@ -78,8 +62,7 @@ function MakeSelectionAuto(Channel, method) {
 	}
 }
 
-///MakeCustomSelection based on min max
-function MakeSelectionManual(Channel, min, max) {
+function SELECTION_ManualMinMaxThreshold(Channel, min, max) {
 	ori_image = getImageID();
 	if (selectionType() != -1) {
 		print("Threshold with min = " + min + " , max = " + max + " on channel " + Channel);
@@ -114,55 +97,45 @@ function MakeSelectionManual(Channel, min, max) {
 	}
 }
 
-/// ROI FUNCTIONS
-function AddROIWithSuffixAsRoi_c() {
-	if (selectionType() != -1) {
-		roiCount = roiManager("count");
-		roiManager("Add");
-		roiManager("Select", roiCount);
-		baseName = File.getNameWithoutExtension(getTitle());
-		CropName = baseName + "_Roi_1";
-		suffix = 2;
-		// Use a for loop to iterate over existing ROIs
-		for (i = 0; i < roiCount; i++) {
-			roiManager("Select", i);
-			roiName = Roi.getName();
-			// Check if the current ROI name matches the CropName
-			if (roiName == CropName) {
-				// If there's a match, generate a new name by adding a suffix
-				CropName = baseName + "_Roi_" + suffix;
-				suffix++;
-				// Reset the loop to start checking again from the first ROI
-				i = -1;  // i will become 0 after the increment, restarting the loop
-			}
-		}
-		// Finally, rename the ROI to the new unique name
-		roiManager("Select", roiCount);
-		roiManager("Rename", CropName);
-		return CropName;
-	};
-		else {
-		print("No selection found");
-		return "";
-	}
+function ROI_AddImageNameWithSuffix(suffix, startnumber) {
+    if (selectionType() == -1) {
+        print("No selection found");
+        return "";
+    }
+
+    roiCount = roiManager("count");
+    roiManager("Add");
+    roiManager("Select", roiCount);
+
+    baseName = File.getNameWithoutExtension(getTitle());
+    prefix   = baseName + suffix;
+
+    // Start from requested number
+    count = startnumber;
+    CropName = prefix + count;
+
+    // Keep incrementing until unique
+    unique = false;
+    while (!unique) {
+        unique = true;
+        for (i = 0; i < roiCount; i++) {
+            roiManager("Select", i);
+            roiName = Roi.getName();
+            if (roiName == CropName) {
+                count++;
+                CropName = prefix + count;
+                unique = false;
+                break; // restart while loop
+            }
+        }
+    }
+
+    roiManager("Select", roiCount);
+    roiManager("Rename", CropName);
+    return CropName;
 }
 
-function AddROIWithPrefix(prefix, roiname) {
-	if (selectionType() != -1) {
-		roiCount = roiManager("count");
-		roiManager("Add");
-		roiManager("Select", roiCount);
-		name = prefix + roiname;
-		roiManager("Rename", name);
-		return name;
-	};
-	else {
-		print("No selection found");
-		return "";
-	}
-}
-
-// function getROIarray() {
+function ROI_GetROIarray() {
 	rC = roiManager("count");
 	roiArray = newArray();
 	for (i = 0; i < rC; i++) {
@@ -171,99 +144,100 @@ function AddROIWithPrefix(prefix, roiname) {
 		roiArray = Array.concat(roiArray, rName);
 	}
 	print("Added ROI Array length = " + lengthOf(roiArray));
+	Array.print(roiArray)
 	return roiArray;
 }
 
-function selectRoiName(roiName) {
-	nR = roiManager("Count");
+function ROI_SelectImageFromROI_Current(extLen, extType) {
+    // Must have an active ROI (click one in ROI Manager first)
+    if (selectionType() == -1) {
+        print("No active ROI. Select an ROI in the ROI Manager first.");
+        return 0; // failure
+    }
 
-	for (i = 0; i < nR; i++) {
-		roiManager("Select", i);
-		rName = Roi.getName();
-		if (matches(rName, roiName)) {
-			return i;
-		}
-	}
-	return -1;
+    // Normalize extType to start with '.'
+    if (lengthOf(extType) > 0 && substring(extType, 0, 1) != ".")
+        extType = "." + extType;
+
+    roiName = Roi.getName();  // e.g., "Sample.tif_Roi_7" or "Sample_Roi_7"
+
+    // Guard against bad extLen
+    if (extLen < 0) extLen = 0;
+    if (extLen > lengthOf(roiName)) {
+        print("extLen longer than ROI name: " + roiName);
+        return 0;
+    }
+
+    // Base image name = roiName without the last extLen chars
+    base = substring(roiName, 0, lengthOf(roiName) - extLen);
+
+    // If base has no dot, add extension
+    if (indexOf(base, ".") < 0)
+        imgNameFull = base + extType;
+    else
+        imgNameFull = base;
+
+    // If that image is open, activate it
+    if (isOpen(imgNameFull)) {
+        selectImage(imgNameFull);
+        // ROI remains selected in ROI Manager and will show on this image
+        print("Selected image \"" + imgNameFull + "\" for ROI \"" + roiName + "\"");
+        return 1; // success
+    } else {
+        print("Image not open for ROI \"" + roiName + "\" (wanted \"" + imgNameFull + "\")");
+        return 0; // failure
+    }
 }
 
-function measureWithRoiLabel() {
-	// Determine whether a ROI is selected
-	if (selectionType() == -1) {
-		roiLabel = "Whole Image";
-	} else {
-		roiLabel = Roi.getName();
-		if (roiLabel == "") {
-			// If somehow no name was assigned to the ROI
-			roiLabel = "Unnamed ROI";
-		}
-	}
+function ROI_SelectImageFromROI_LoopAllROIs(extLen, extType) {
+    rC = roiManager("count");
+    if (rC == 0) {
+        print("No ROIs in manager.");
+        return;
+    }
 
-	// Count how many rows currently exist in the Results table
-	rowCountBefore = nResults;
+    // Optional: normalize extType to start with a dot.
+    if (lengthOf(extType) > 0 && substring(extType, 0, 1) != ".")
+        extType = "." + extType;
 
-	// Run the measurement
-	run("Measure");
+    for (i = 0; i < rC; i++) {
+    	wait(100);
+        roiManager("Select", i);
+        roiName = Roi.getName();  // full ROI name
 
-	// The new measurement will be placed at the last row: nResults - 1
-	newRowIndex = nResults - 1;
+        // Guard: if extLen is longer than roiName, skip safely
+        if (extLen < 0) extLen = 0;
+        if (extLen > lengthOf(roiName)) {
+            print("Skip (extLen longer than ROI name): " + roiName);
+            continue;ROI_LoopAndSelectAllROIs
+        }
 
-	// Insert an extra column named "Roi"
-	setResult("Roi", newRowIndex, roiLabel);
+        // Strip the ROI suffix (last extLen characters) to get the image name part
+        imgName = substring(roiName, 0, lengthOf(roiName) - extLen);
 
-	// (Optional) Update the Results window display
-	updateResults();
+        // If there is no dot, add extension; else use as-is
+        if (indexOf(imgName, ".") < 0)
+            imgNameFull = imgName + extType;
+        else
+            imgNameFull = imgName;
+
+        // Only select if that image is open (avoid exceptions)
+        if (isOpen(imgNameFull)) {
+            selectImage(imgNameFull);   // activate the image window
+            // ROI is already selected in the ROI Manager; it now applies to the active image
+            print("Matched ROI: \"" + roiName + "\"  ->  \"" + imgNameFull + "\"");
+            
+			/// Whatever function code
+            /// will be ran here 
+			/// E.g., run("Measure");
+
+        } else {
+            print("Image NOT open for ROI: \"" + roiName + "\" (wanted \"" + imgNameFull + "\")");
+        }
+    }
 }
 
-function selectRoiName(roiName) {
-	nR = roiManager("Count");
-	for (i = 0; i < nR; i++) {
-		// Temporarily select each ROI in the manager...
-		roiManager("Select", i);
-		rName = Roi.getName();
-		// ...then check if it matches the ROI name we want
-		if (matches(rName, roiName)) {
-			return i; // Found the matching ROI, return its index
-		}
-	}
-	return -1; // If we get here, no ROI matched
-}
-
-function selectImageFromROIName() {
-	// Get the current ROI name
-	roiName = Roi.getName();
-	// Grab a list of all open image titles
-	titles = getList("image.titles");
-
-	found = false;
-
-	// Loop from full length of roiName down to 1
-	for (subLen = lengthOf(roiName); subLen > 0; subLen--) {
-		testName = substring(roiName, 0, subLen);
-
-		// Check each open image title
-		for (i = 0; i < titles.length; i++) {
-			if (testName == titles[i]) {
-				selectWindow(titles[i]);
-				found = true;
-				break;
-			}
-		}
-		// If found, no need to keep searching
-		if (found)
-			break;
-	}
-
-	// If no match is found, print a message
-	if (!found) {
-		print("No matching window found for ROI name: " + roiName);
-	}
-	else {
-		selectRoiName(roiName);
-	}
-}
-
-function RoiAlignedTopLeftRoi() {
+function ROI_MoveCurrentRoiToTopLeft() {
 	Roi.getCoordinates(xpoints, ypoints);
 	Array.getStatistics(xpoints, xmin, xmax, xmean, xstdDev);
 	Array.getStatistics(ypoints, ymin, ymax, ymean, ystdDev);
@@ -310,8 +284,35 @@ function RoiAlignedTopLeftRoi() {
 	}
 }
 
+function MEASURE_AddROILabelColumn() {
+	// Determine whether a ROI is selected
+	if (selectionType() == -1) {
+		roiLabel = "Whole Image";
+	} else {
+		roiLabel = Roi.getName();
+		if (roiLabel == "") {
+			// If somehow no name was assigned to the ROI
+			roiLabel = "Unnamed ROI";
+		}
+	}
 
-function saveAllImagesAsTif() {
+	// Count how many rows currently exist in the Results table
+	rowCountBefore = nResults;
+
+	// Run the measurement
+	run("Measure");
+
+	// The new measurement will be placed at the last row: nResults - 1
+	newRowIndex = nResults - 1;
+
+	// Insert an extra column named "Roi"
+	setResult("Roi", newRowIndex, roiLabel);
+
+	// (Optional) Update the Results window display
+	updateResults();
+}
+
+function SAVE_AllCurrentImagesToSelectedFolderAsTif() {
 	// Prompt the user to select a directory
 	outputDir = getDirectory("Choose a directory to save all images as .tif");
 

@@ -40,6 +40,9 @@ close("\\Others"); // Closes all images except for the front image.
 getTitle(); // get current image's name;
 getList("image.titles"); // Get all images in an array list
 
+	
+getDirectory("image") + getTitle(); // Get Image Directory (including image name)
+
 setAutoThreshold("Huang dark"); //Set Threshold
 resetThreshold();}; // Reset Threshold
 
