@@ -1,5 +1,37 @@
 ===================================
-macro "===CUSTOMED FUNCTIONS===" {}
+macro "____HELPFUL ROUTINES____" {}
+===================================
+
+Trigger Auto-completion dialog: Ctrl + Space
+
+macro "-LOOP: Quick images & ROIs" {}
+
+for (j=1; j<=nImages; j++) {selectImage(j);run("Measure");}; // Measure
+for (j=1; j<=nImages; j++) {selectImage(j);setAutoThreshold("Huang dark");}; //Set Threshold
+for (j=1; j<=nImages; j++) {selectImage(j);resetThreshold();}; // Reset Threshold
+
+roiCount=roiManager("count");roiManager("Select",roiCount-1);roiManager("Rename", getTitle()); // Rename lastest ROI with image name
+
+Match Image name and ROI
+for (j=1; j<=nImages; j++) {selectImage(j);imageName = getTitle(); roiCount = roiManager("count"); for (i = 0; i < roiCount; i++) { roiManager("Select", i); roiName = Roi.getName(); if (roiName == imageName) { break;}}};
+
+macro "-TEXT: create textbox as overlay" {
+	insertedtext = "any thing";
+	setFont("SansSerif", 50, " antialiased");
+	makeText(insertedtext, 1150, 350); // Create textbox with text at (x,y) (will disappear with clicking anywhere)
+	run("Add Selection...", "stroke=yellow"); // Turn text into overlay (stay shown unless deleted)
+	run("Select None");
+}
+
+macro "-SLIDE-COMPOSITE: selection & displaymode" {}
+
+setSlice(1)
+for (j=1; j<=nImages; j++) {selectImage(j);setSlice(1);};
+Stack.setDisplayMode("composite");
+Stack.setDisplayMode("color");
+
+===================================
+macro "____CUSTOMED FUNCTIONS____" {}
 ===================================
 
 function LOG_TimeAndImageInfo() {
@@ -16,7 +48,7 @@ function LOG_TimeAndImageInfo() {
 	TimeString = TimeString + minute + ":";
 	if (second < 10) { TimeString = TimeString + "0"; }
 	TimeString = TimeString + second;
-	print("=== " + TimeString);
+	print("____ " + TimeString);
 
 	// Image Directory&Size
 	print(getDirectory("image") + getTitle());
@@ -96,6 +128,8 @@ function SELECTION_ManualMinMaxThreshold(Channel, min, max) {
 		}
 	}
 }
+
+macro "—————————" {}
 
 function ROI_AddImageNameWithSuffix(suffix, startnumber) {
     if (selectionType() == -1) {
@@ -339,7 +373,7 @@ function SAVE_AllCurrentImagesToSelectedFolderAsTif() {
 	}
 }
 
-function StackClearOutside() {
+function STACK_ClearOutSideWith3DROI() {
 	nR = roiManager("count");
 	for (i = 0; i < nR; i++) {
 		roiManager("select", i);
@@ -347,9 +381,21 @@ function StackClearOutside() {
 	}
 }
 
+function ARRAY_FilterItemsWithSpecifiedEnding(files, ending) {
+	// for an array of file names, return a new array of those with specified ending
+	ArrayWithEnding = newArray(0);
+	for (i = 0; i < files.length; i++) {
+		file = files[i];
+		if (endsWith(file, ending)) {
+			f = newArray(1);
+			f[0] = file;
+			ArrayWithEnding = Array.concat(ArrayWithEnding, f);
+		}
+	}
+	return ArrayWithEnding;
+}
 
-// a = RandomOpenImages(nImages);
-function RandomOpenImages(NumOfOpenImages) {
+function RANDOMIZE_CreateTableForOpenImages(NumOfOpenImages) {
 	OpenImages = getList("image.titles");
 	IndexArray = newArray(NumOfOpenImages);
 	for (i = 0; i < NumOfOpenImages; i++) {
@@ -367,14 +413,45 @@ function RandomOpenImages(NumOfOpenImages) {
 	selectWindow("RandomizedMap");
 	for (i = 0; i < NumOfOpenImages; i++) {
 		nRow = Table.size;
-		Table.set("PreRan", i, i);
-		Table.set("PostRan", i, IndexArray[i]);
+		Table.set("OldImageNumber", i, i);
+		Table.set("NewImageNumber", i, IndexArray[i]);
 		Table.set("ImageName", i, OpenImages[IndexArray[i]]);
 	}
 	return IndexArray;
 }
 
-printStatistics();
+===================================
+macro "____BUILT-IN FUNCTIONS____" {}
+===================================
+
+macro "THRESHOLD" {}
+setAutoThreshold("Huang dark"); //Set Threshold
+resetThreshold(); // Reset Threshold
+
+macro "ARRAY_&_STRING" {}
+getTitle(); // get current image's name;
+getList("image.titles"); // Get all images in an array list
+getList("window.titles"); // Get all opening window titles
+getDirectory("image") + getTitle(); // Get Image Directory (including image name)
+substring(filename, 0, lastIndexOf(filename, ".")); // Get name without extension.
+endsWith(file, ending); // Return 1 if the "file" ends with "ending"
+
+macro "TABLE" {}
+getResult("Column", row): // NUMERIC result. 0 <= row < nResults. lastRow = nResults-1
+getResultString("Column", row): // STRING result.
+getResultLabel(row): // column label Columns
+setResult("Column", row, value) // for NUMBER
+setResult("Label", row, string) // for STRING
+Table.deleteRows(nResults-1, nResults-1); // DELETE THE LAST ROW (from nResults-1 to nResults-1)
+getValue("results.count"): // number of counts in a table. WORK WITH TABLES NOT NAMED "Results"
+
+macro "OTHERS" {}
+close("\\Others"); // Closes all images except for the front image.
+
+===================================
+macro "____TO BE ORGANIZED____" {}
+===================================
+
 function printStatistics() {
 	getRawStatistics(nPixels, mean, min, max, std, histogram);
 	print("nPixels: " + nPixels);
@@ -382,27 +459,7 @@ function printStatistics() {
 	print("Sd: " + std);
 }
 
-function selectEnding(files, ending) {
-	// for an array of file names, return a new array of those with specified ending
-	withEnding = newArray(0);
-	for (i = 0; i < files.length; i++) {
-		file = files[i];
-		if (endsWith(file, ending)) {
-			f = newArray(1);
-			f[0] = file;
-			withEnding = Array.concat(withEnding, f);
-		}
-	}
-	return withEnding;
-}
-
-function baseName(filename) {
-	// return filename string without extension
-	return substring(filename, 0, lastIndexOf(filename, "."));
-}
-
-
-macro "Macro Next Ran Image from RandomizedMap [0]" {
+function UnDone_RANDOMIZE_SelectImageFromRandomizedMap() {
 
 	windowlist = getList("window.titles");
 	SuffleTable = "RandomizedMap";
