@@ -1,4 +1,0 @@
-[Macro interactive mode. Type "help" for info.]
-
-for (j=1; j<=nImages; j++) {selectImage(j);run("Out [-]");};
-

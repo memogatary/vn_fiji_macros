@@ -346,6 +346,42 @@ function MEASURE_AddROILabelColumn() {
 	updateResults();
 }
 
+function HISTOGRAM_SelectFromPercentile(p) {
+    // p in [0,100], returns intensity at percentile p from RAW histogram
+    getRawStatistics(n, mean, minv, maxv, std, hist); // hist: 256 bins over RAW min..max
+    total = 0; for (i=0; i<hist.length; i++) total += hist[i];
+    target = total * p/100.0;
+    acc = 0;
+    for (i=0; i<hist.length; i++) { acc += hist[i]; if (acc >= target) break; }
+    // map bin -> intensity
+    return minv + (maxv - minv) * (i + 0.5)/hist.length;
+}
+
+macro "—————————" {}
+
+
+function OPEN_OnlySelectedFilesFromArray() {
+	path = getDirectory("Choose the folder");
+	// Manually create a fileArray which contained files to be opened
+	// Below is an example
+	fileArray = newArray("File1.tif", "File2.tif", "FineN.tif");
+
+	for (j=0; j<fileArray.length; j++) {
+		filepath = path + fileArray[j];
+		open(filepath);
+	}
+}
+
+function FILES_GetAllPathsFromFolder(folderpath) {
+	FileNameArray = getFileList(folderpath);
+	FileFullPathArray = newArray(lengthOf(FileNameArray));
+	for (i = 0; i < lengthOf(FileNameArray); i++) {
+	    name = FileNameArray[i];
+	    FileFullPathArray[i] = folderpath + name;
+	}
+	return FileFullPathArray;
+}
+
 function SAVE_AllCurrentImagesToSelectedFolderAsTif() {
 	// Prompt the user to select a directory
 	outputDir = getDirectory("Choose a directory to save all images as .tif");
@@ -372,6 +408,7 @@ function SAVE_AllCurrentImagesToSelectedFolderAsTif() {
 		saveAs("Tiff", savePath);
 	}
 }
+
 
 function STACK_ClearOutSideWith3DROI() {
 	nR = roiManager("count");
@@ -424,7 +461,11 @@ function RANDOMIZE_CreateTableForOpenImages(NumOfOpenImages) {
 macro "____BUILT-IN FUNCTIONS____" {}
 ===================================
 
+macro "IMAGE_PROCESSING" {}
+run("Subtract...", "value="+Number); // e.g, Number = getValue("Mode");
+
 macro "THRESHOLD" {}
+resetMinAndMax(); // Important! Because AuthThreshold apply to current displayed image, not raw intensity
 setAutoThreshold("Huang dark"); //Set Threshold
 resetThreshold(); // Reset Threshold
 
@@ -481,4 +522,15 @@ function UnDone_RANDOMIZE_SelectImageFromRandomizedMap() {
 		}
 		return -1;
 	}
+}
+
+function percentileFromRaw(p) {
+    // p in [0,100], returns intensity at percentile p from RAW histogram
+    getRawStatistics(n, mean, minv, maxv, std, hist); // hist: 256 bins over RAW min..max
+    total = 0; for (i=0; i<hist.length; i++) total += hist[i];
+    target = total * p/100.0;
+    acc = 0;
+    for (i=0; i<hist.length; i++) { acc += hist[i]; if (acc >= target) break; }
+    // map bin -> intensity
+    return minv + (maxv - minv) * (i + 0.5)/hist.length;
 }

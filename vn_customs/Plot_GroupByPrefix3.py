@@ -31,8 +31,8 @@ gd = GenericDialog("Select Columns and Number of Groups")
 gd.addStringField("Group Column:", "Label", 20)
 gd.addMessage("Select Graphs to Display")
 gd.addCheckboxGroup(4, hds_length, headingArray, CheckBoxValues)
-gd.addNumericField("Number of groups:", 2, 0)
-gd.addNumericField("Number of default prefix character:", 3, 0)
+gd.addNumericField("Number of groups:", 3, 0)
+gd.addNumericField("Number of default prefix character:", 7, 0)
 # Add input for optional prefix filter
 gd.addStringField("Filter prefix (optional):", "", 20)
 gd.showDialog()
@@ -89,6 +89,9 @@ grouped_data = {prefix: [] for prefix in selected_prefixes}
 for iteration, checkvalue in enumerate(selected):
     if checkvalue:
         y_column_name = headingArray[iteration]
+        
+        # RESET for this graph
+        grouped_data = {prefix: [] for prefix in selected_prefixes}
 
         # Group data based on selected prefixes
         for i in range(rt.size()):
