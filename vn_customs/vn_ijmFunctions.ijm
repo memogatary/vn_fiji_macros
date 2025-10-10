@@ -486,6 +486,9 @@ setResult("Label", row, string) // for STRING
 Table.deleteRows(nResults-1, nResults-1); // DELETE THE LAST ROW (from nResults-1 to nResults-1)
 getValue("results.count"): // number of counts in a table. WORK WITH TABLES NOT NAMED "Results"
 
+IJ.renameResults("Results","Temp Results"); // Rename Table "Results" to "Temp Results"
+IJ.renameResults("Temp Results","Results"); // Rename Table "Temp Results" to "Results"
+
 macro "OTHERS" {}
 close("\\Others"); // Closes all images except for the front image.
 
