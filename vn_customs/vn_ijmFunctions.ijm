@@ -56,6 +56,21 @@ function LOG_TimeAndImageInfo() {
 	print("Pixel Width = " + pxW + ", Height = " + pxH + " " + unit);
 }
 
+function BG_SUBSTRACT_mode(channel, smooth) {
+	Stack.setDisplayMode("color");
+	setSlice(channel);
+	// run("Select None"); // only apply to selections
+	mode = getValue("Mode");
+	if (mode>120) {
+		print("mode = " + mode + "in image: " + getTitle());
+	}
+	run("Subtract...", "value="+mode);
+	if (smooth) {
+		run("Smooth", "slice");
+	}
+	// run("Restore Selection");
+}
+
 function SELECTION_AutoThreshold(Channel, method) {
 	ori_image = getImageID();
 	if (selectionType() != -1) {
@@ -129,8 +144,63 @@ function SELECTION_ManualMinMaxThreshold(Channel, min, max) {
 	}
 }
 
+function SELECTION_PercentileAutoThreshold(Channel, method, low, high) {
+	ori_image = getImageID();
+	if (selectionType() != -1) {
+		print("Threshold with " + method + " on channel " + Channel + " using Low/High percentile of " + low + "/" + high);
+		nR = roiManager("count");
+		roiManager("add"); // nR - 1
+		run("Select None");
+		run("Duplicate...", "title=Temporary duplicate channels=" + Channel);
+		roiManager("Select", nR); //1
+
+		pLo = percentileFromRaw(low);
+		pHi = percentileFromRaw(high);
+		setMinAndMax(pLo, pHi);
+
+		setAutoThreshold(method + " dark");
+		run("Create Selection");
+//		run("Enlarge...", "enlarge=0.5"); // By default is calibrated unit (like micron)
+		if (selectionType() != -1) {
+			nR = roiManager("count"); // Reset nR
+			roiManager("add"); // nR
+			roiManager("Select", newArray(nR, nR - 1));
+			roiManager("AND");
+			roiManager("add"); // Rest nR
+			close("Temporary");
+			selectImage(ori_image);
+			nR = roiManager("count");
+			roiManager("deselect");
+			roiManager("Select", nR - 3);
+			roiManager("delete");
+			roiManager("Select", nR - 3);
+			roiManager("delete");
+			roiManager("Select", nR - 3); // Overlap ROI
+			roiManager("delete");
+		}
+		else {
+			close("Temporary");
+			roiManager("delete");
+			selectImage(ori_image);
+			run("Select None");
+			print("No region detected.");
+		}
+	}
+	function percentileFromRaw(p) {
+    // p in [0,100], returns intensity at percentile p from RAW histogram
+    getRawStatistics(n, mean, minv, maxv, std, hist); // hist: 256 bins over RAW min..max
+    total = 0; for (i=0; i<hist.length; i++) total += hist[i];
+    target = total * p/100.0;
+    acc = 0;
+    for (i=0; i<hist.length; i++) { acc += hist[i]; if (acc >= target) break; }
+    // map bin -> intensity
+    return minv + (maxv - minv) * (i + 0.5)/hist.length;
+}
+}
+
 macro "—————————" {}
 
+// StartNumber = minimal roi number. If start number is present, will add at least startnumber +1 if available
 function ROI_AddImageNameWithSuffix(suffix, startnumber) {
     if (selectionType() == -1) {
         print("No selection found");
