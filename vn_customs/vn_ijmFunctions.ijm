@@ -30,6 +30,11 @@ for (j=1; j<=nImages; j++) {selectImage(j);setSlice(1);};
 Stack.setDisplayMode("composite");
 Stack.setDisplayMode("color");
 
+macro "-FILE-DIRECTORY: Open File, Get File Path etc" {}
+
+getDir("image"); // Returns the path to the directory that the active image was loaded from.
+getDir("Choose a Directory"); // Displays a file open dialog, using the argument as a title, and returns the path to the directory selected by the user.
+
 ===================================
 macro "____CUSTOMED FUNCTIONS____" {}
 ===================================
