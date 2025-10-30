@@ -32,7 +32,7 @@ gd.addStringField("Group Column:", "Label", 20)
 gd.addMessage("Select Graphs to Display")
 gd.addCheckboxGroup(4, hds_length, headingArray, CheckBoxValues)
 gd.addNumericField("Number of groups:", 3, 0)
-gd.addNumericField("Number of default prefix character:", 7, 0)
+gd.addNumericField("Number of default prefix character:", 5, 0)
 # Add input for optional prefix filter
 gd.addStringField("Filter prefix (optional):", "", 20)
 gd.showDialog()
