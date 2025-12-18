@@ -22,7 +22,7 @@ headingArray = []
 CheckBoxValues = []
 for i in range(len(hds)):
     headingArray.append(hds[i])
-    CheckBoxValues.append(0)  # Default will select everything
+    CheckBoxValues.append(1)  # Default will select everything
 CheckBoxValues[0] = 0   # Label/1st Column is often group names
 
 # Prompt user to select the column to plot

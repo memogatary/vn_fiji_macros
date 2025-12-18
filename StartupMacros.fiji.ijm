@@ -710,6 +710,10 @@ function indexOfArray(array, value) {
 ////////////// TEMPORARY SHORTCUT /////////
 
 
+macro "Add Selection & Save [F3]" {
+	run("Add Selection...");run("Save");
+}
+
 
 
 macro "Actin Around Mitochondria [F2]" {
